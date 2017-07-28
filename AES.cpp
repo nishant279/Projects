@@ -18,6 +18,7 @@ using namespace std;
 #define KLEN 16 ///key length in bytes
 #define NR 10 ///Rounds in AES128
 #define xtime(x)   ((x<<1) ^ (((x>>7) & 1) * 0x11b)) ///This macro finds the product of {02} and the argument to xtime modulo {1b}
+
 unsigned char round_key[176];
 unsigned char key[16]; ///= {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
 unsigned char plain_text[16];
@@ -28,10 +29,8 @@ string plain_result;
 vector<int> index_plus;
 vector<int> index_minus;
 vector<int> index_plus_minus;
-///vector<string> pt;
-///vector<string> ct;
 int str_length;
-///int str_rem;
+
 ///All the functions used
 unsigned char s_box(unsigned char);
 unsigned char rs_box(unsigned char);
@@ -210,10 +209,9 @@ void key_expansion(){
                 temp[2] = s_box(temp[2]);
                 temp[3] = s_box(temp[3]);
             }
-            ///temp[0] = temp[0] ^ rcon[i/NB];
+
             temp[0] = temp[0] ^ rcon[i/(KLEN/4)-1];
-            ///printf("%.2x", rcon[i/(KLEN/4)-1]);
-            ///printf("\n");
+            
         }
         round_key[i*4] = round_key[(i-NB)*4] ^ temp[0];
         round_key[i*4+1] = round_key[(i-NB)*4+1] ^ temp[1];
@@ -418,20 +416,9 @@ void inv_cipher(){
 
 void out_cipher_in_file(){
     foc = fopen("ciphertexthex.txt", "w");
-    ///if(str_length%16 == 0){
-        ///for(int i = 0; i < str_length/16; i++){
-            for(int i = 0; i < 16; i++){
-                fprintf(foc, "%.2x ", cipher_text[i]);
-            }
-       /// }
-    ///}
-    ///else{
-        ///for(int i = 0; i <= str_length/16; i++){
-            ///for(int j = 0; j < 16; j++){
-             ///   fprintf(foc, "%.2x ", cipher_text[i*16+j]);
-          ///  }
-       /// }
-    ///}
+    for(int i = 0; i < 16; i++){
+        fprintf(foc, "%.2x ", cipher_text[i]);
+    }
     fclose(foc);
 }
 
@@ -443,53 +430,16 @@ void out_plain_in_file(){
     fclose(fop);
 }
 
-/**void out_cipher(){
-    foc = fopen("ciphertextresult.txt", "r");
-    unsigned char c[16];
-    for(int i = 0; i < 16; i++){
-        fscanf(foc, "%x", &c[i]);
-        cipher_result += (char)c[i];
-    }
-    cout<<cipher_result<<endl;
-    fclose(foc);
-}**/
 void out_cipher(){
     int c[16];
-    ///int s;
     foc = fopen("ciphertexthex.txt", "r");
     for(int i = 0; i < 16; i++){
         fscanf(foc, "%x", &c[i]);
         cipher_result = cipher_result + (char)c[i];
     }
-    ///fco = fopen("ciphertextresulttext.txt", "w");
-    ///for(int i = 0; i < cipher_result.length(); i++){
-       /// fprintf(foc, "%s", cipher_result[i]);
-    ///}
     ofstream out("ciphertextresult.txt");
     out<<cipher_result;
     out.close();
-        ///s = (int)c[i];
-        ///if(s > 128){
-           /// s = s - 128;
-            ///if(s < 32){
-               /// s = s + 10;
-                ///index_plus_minus.push_back(i);
-            ///}
-           /// else{
-              ///  index_plus.push_back(i);
-            ///}
-            ///cipher_result = cipher_result + (char)s;
-        ///}
-        ///else if(s < 32){
-           /// s = s + 10;
-            ///index_minus.push_back(i);
-            ///cipher_result = cipher_result + (char)s;
-        ///}
-        ///else{
-           /// cipher_result = cipher_result + (char)s;
-        ///}
-    ///for(int i = 0; i < 16; i++)
-       /// printf("%x", cipher_result[i]);
     /**
     for(int i = 0; i < 16; i++){
         printf("%.2x ", c[i]);
@@ -503,31 +453,9 @@ void out_plain(){
         fscanf(fop, "%x", &c[i]);
         plain_result = plain_result + (char)c[i];
     }
-    ///fclose(fop);
-    ///fpo = fopen("plaintextresulttext.txt", "w");
-    ///for(int i = 0; i < 16; i++){
-       /// fprintf(fpo, "%s", plain_result[i]);
-    ///}
-    ///fclose(fpo);
     ofstream out("plaintextresult.txt");
     out<<plain_result;
     out.close();
-        /**if(s < 0){
-            s = s + 128;
-            if(s < 32){
-                s = s + 32;
-            }
-            plain_result = plain_result + s;
-        }
-        else if(s < 32){
-            s = s + 32;
-            plain_result = plain_result + s;
-        }
-        else{
-            plain_result = plain_result + s;
-        }**/
-    ///for(int i = 0; i < 16; i++)
-       /// printf("%x", plain_result[i]);
     /**
     for(int i = 0; i < 16; i++){
         printf("%.2x ", c[i]);
@@ -568,8 +496,6 @@ int main(){
         getline(cin, choice);
         FILE *fpk, *fpl, *fpc;
         string keystring, ptstring, ctstring;
-        ///string cipher_result = "";
-        ///string plain_result = "";
         if(choice == "1"){
             cout<<"Enter 128 - bit key: ";
             getline(cin, keystring);
@@ -590,85 +516,17 @@ int main(){
                 fscanf(fpk, "%x", &key[i]);
             }
             fclose(fpk);
-            ///string c;
+       
             fpl = fopen("plaintext.txt", "r");
             for(int i = 0; i < 16; i++){
                 fscanf(fpl, "%x", &plain_text[i]);
-              ///  pt.push_back(c);
             }
-            ///ifstream is("plaintext.txt");
-            ///getline(is, ptstring);
-            ///for(int i = 0; i < ptstring.length(); i++){
-               /// cout<<ptstring[i];
-            ///}
-            /**str_length = ptstring.length();
-            fplhex = fopen("plainhex.txt", "w");
-            int str_rem = str_length%16;
-            int bsize;
-            if(str_rem == 0){
-                bsize = str_length/16;
-            }
-            else{
-                bsize = str_length/16+1;
-            }
-            if(str_rem == 0){
-                for(int i = 0; i < (str_length/16); i++){
-                    for(int j = 0; j < 16; j++){
-                        fprintf(fplhex, "%.2x ", ptstring[i*16+j]);
-                    }
-                }
-            }
-            else{
-                for(int i = 0; i <= (str_length/16); i++){
-                    for(int j = 0; j < 16; j++){
-                        fprintf(fplhex, "%.2x ", ptstring[i*16+j]);
-                    }
-                }
-            }
-            fclose(fplhex);
-            cout<<ptstring<<endl;
-            cout<<bsize<<endl;
-            unsigned char pt[(16*bsize)];
-            fplhex = fopen("plainhex.txt", "r");
-            ///if(str_length%16 == 0){
-
-                for(int i = 0; i < bsize; i++){
-                    for(int j = 0; j < 16; j++){
-                        fscanf(fplhex, "%x", &pt[i*16+j]);
-                    }
-                    ///cipher_result = "";
-                    ///encrypt();
-                }
-            ///}
-            ///else{
-               /// for(int i = 0; i <= (str_length/16); i++){
-                  ///  for(int j = 0; j < 16; j++){
-                     ///   fscanf(fplhex, "%x ", plain_text[i*16+j]);
-                    ///}
-                ///}
-            ///}
-            fclose(fplhex);
-            cout<<"something"<<endl;
-            fpl = fopen("plain16.txt", "w");
-            for(int i = 0; i < (bsize); i++){
-                for(int j = 0; j < 16; j++){
-                    fprintf(fpl, "%.2x ", pt[i*16+j]);
-                }
-                fpl1 = fopen("plain16.txt", "r");
-                for(int j = 0; j < 16; j++){
-                    fscanf(fpl1, "%x", plain_text[j]);
-                }
-                encrypt();
-            }
-            fclose(fpl);
-            fclose(fpl1);**/
             fclose(fpl);
             cout<<"The encryption is being performed...\nThe encrypted text will be stored in \"ciphertextresult.txt\" file\n\n\n";
             cipher_result = "";
             encrypt();
         }
         else if(choice == "2"){
-            ///int jpm = 0, jp = 0, jm = 0;
             cout<<"Enter 128 - bit key: ";
             getline(cin, keystring);
             fpk = fopen("key.txt", "w");
@@ -676,29 +534,6 @@ int main(){
                 fprintf(fpk, "%.2x ", keystring[i]);
             }
             fclose(fpk);
-            ///cout<<"Enter Cipher Text: ";
-            ///getline(cin, ctstring);
-            /**fpc = fopen("ciphertext.txt", "w");
-            for(int i = 0; i < ctstring.length(); i++){
-                int c = int(ctstring[i]);
-                if(i == index_plus_minus[jpm]){
-                    ctstring[i] = (char)((c + 128) - 32);
-                    jpm++;
-                }
-                else if(i == index_plus[jp]){
-                    ctstring[i] = (char)(c + 128);
-                    jp++;
-                }
-                else if(i == index_minus[jm]){
-                    ctstring[i] = (char)(c - 32);
-                    jm++;
-                }
-            }**/
-            /**fpc = fopen("ciphertext.txt", "w");
-            for(int i = 0; i < ctstring.length(); i++){
-                 fprintf(fpc, "%.2x ", ctstring[i]);
-            }
-            fclose(fpc);**/
             fpk = fopen("key.txt", "r");
             for(int i = 0; i < 16; i++){
                 fscanf(fpk, "%x", &key[i]);
